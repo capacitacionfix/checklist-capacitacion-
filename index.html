@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Needed for Microsoft login popup inside SharePoint iframe -->
+<meta http-equiv="Content-Security-Policy" content="frame-ancestors 'self' https://*.sharepoint.com https://*.microsoft.com;">
+<title>Checklist de Capacitación Técnica</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --navy:#0f1e3c;--blue:#1a3a6e;--accent:#2563eb;--teal:#0d9488;
+  --orange:#ea580c;--amber:#d97706;--green:#16a34a;--red:#dc2626;
+  --surface:#f8faff;--card:#ffffff;--border:#e2e8f8;
+  --text:#1e293b;--muted:#64748b;--light:#f1f5fb;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--text);min-height:100vh;}
+
+.hero{background:var(--navy);position:relative;overflow:hidden;padding:44px 40px 32px;}
+.hero::before{content:'';position:absolute;top:-60px;right:-60px;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(37,99,235,.35) 0%,transparent 70%);pointer-events:none;}
+.hero::after{content:'';position:absolute;bottom:-40px;left:20%;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(13,148,136,.25) 0%,transparent 70%);pointer-events:none;}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--teal);text-transform:uppercase;letter-spacing:.15em;margin-bottom:14px;border:1px solid rgba(13,148,136,.4);padding:5px 13px;border-radius:100px;background:rgba(13,148,136,.08);}
+.hero-tag::before{content:'●';font-size:8px;}
+h1{font-family:'DM Serif Display',serif;font-size:clamp(26px,4vw,44px);color:#fff;line-height:1.1;max-width:700px;margin-bottom:6px;}
+h1 em{font-style:italic;color:#93c5fd;}
+.hero-sub{font-size:13px;color:rgba(255,255,255,.5);font-weight:300;margin-top:8px;}
+
+/* TABS */
+.tabs-bar{background:var(--blue);display:flex;align-items:flex-end;gap:3px;padding:0 40px;overflow-x:auto;border-bottom:2px solid rgba(255,255,255,.1);}
+.tab{display:flex;align-items:center;gap:7px;padding:11px 18px;font-size:12px;font-weight:500;color:rgba(255,255,255,.55);cursor:pointer;border-radius:9px 9px 0 0;border:1px solid transparent;border-bottom:none;transition:all .2s;white-space:nowrap;background:transparent;font-family:'DM Sans',sans-serif;position:relative;bottom:-2px;}
+.tab:hover{color:rgba(255,255,255,.85);background:rgba(255,255,255,.07);}
+.tab.active{color:var(--text);background:var(--surface);border-color:rgba(255,255,255,.15);border-bottom-color:var(--surface);font-weight:600;}
+.tab-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.tab-badge{font-size:10px;font-family:'JetBrains Mono',monospace;background:rgba(255,255,255,.15);color:rgba(255,255,255,.7);border-radius:999px;padding:1px 7px;}
+.tab.active .tab-badge{background:var(--accent);color:#fff;}
+.tab-add{display:flex;align-items:center;gap:6px;padding:9px 14px;font-size:12px;color:rgba(255,255,255,.45);cursor:pointer;border-radius:8px;border:1px dashed rgba(255,255,255,.2);margin-bottom:5px;transition:all .2s;background:transparent;font-family:'DM Sans',sans-serif;white-space:nowrap;}
+.tab-add:hover{color:rgba(255,255,255,.8);border-color:rgba(255,255,255,.4);}
+.tab-actions{display:flex;gap:3px;margin-left:4px;align-items:center;}
+.tab-action-btn{width:18px;height:18px;border-radius:4px;border:none;background:transparent;color:rgba(255,255,255,.4);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;padding:0;transition:all .18s;line-height:1;}
+.tab-action-btn:hover{background:rgba(255,255,255,.15);color:#fff;}
+.tab-action-btn.del:hover{background:rgba(220,38,38,.5);color:#fff;}
+/* Rename modal */
+.rename-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(3px);z-index:1100;display:none;align-items:center;justify-content:center;}
+.rename-overlay.open{display:flex;}
+.rename-box{background:#fff;border-radius:14px;padding:22px 24px;width:100%;max-width:380px;box-shadow:0 16px 48px rgba(0,0,0,.2);animation:modalIn .2s ease;}
+.rename-box h4{font-family:'DM Serif Display',serif;font-size:18px;color:var(--text);margin-bottom:6px;}
+.rename-box p{font-size:12px;color:var(--muted);margin-bottom:14px;}
+.rename-box input{width:100%;border:1.5px solid var(--border);border-radius:9px;padding:9px 12px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;transition:border-color .2s;}
+.rename-box input:focus{border-color:var(--accent);}
+.rename-actions{display:flex;gap:8px;margin-top:14px;justify-content:flex-end;}
+.btn-danger{background:#dc2626;color:#fff;}
+.btn-danger:hover{background:#b91c1c;}
+
+.page{display:none;}
+.page.active{display:block;}
+
+/* INFO */
+.info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;padding:18px 40px;background:var(--blue);}
+.info-field{display:flex;flex-direction:column;gap:4px;}
+.info-field label{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.45);font-weight:600;}
+.info-field input,.info-field select,.info-field textarea{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:7px 11px;color:#fff;font-family:'DM Sans',sans-serif;font-size:12px;outline:none;transition:border-color .2s;}
+.info-field input:focus,.info-field select:focus{border-color:rgba(147,197,253,.5);background:rgba(255,255,255,.12);}
+.info-field input::placeholder{color:rgba(255,255,255,.25);}
+.info-field select option{color:var(--text);background:#fff;}
+.tipo-pill{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:999px;font-size:11px;font-weight:700;margin-top:4px;}
+.pill-ni{background:rgba(37,99,235,.3);color:#93c5fd;border:1px solid rgba(37,99,235,.4);}
+.pill-ref{background:rgba(234,88,12,.3);color:#fdba74;border:1px solid rgba(234,88,12,.4);}
+
+/* STATS */
+.stats-bar{display:flex;align-items:center;padding:14px 40px;background:var(--card);border-bottom:1px solid var(--border);flex-wrap:wrap;gap:0;}
+.stat{display:flex;flex-direction:column;align-items:center;padding:0 20px;border-right:1px solid var(--border);}
+.stat:first-child{padding-left:0;}
+.stat:last-child{border-right:none;}
+.stat-num{font-family:'DM Serif Display',serif;font-size:24px;color:var(--accent);line-height:1;}
+.stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-top:1px;}
+.progress-wrap{flex:1;padding:0 20px;min-width:160px;}
+.progress-label{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:5px;}
+.progress-bar-track{height:5px;background:var(--border);border-radius:999px;overflow:hidden;}
+.progress-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--teal));border-radius:999px;width:0%;transition:width .8s cubic-bezier(.4,0,.2,1);}
+
+/* MAIN */
+.main{max-width:1200px;margin:0 auto;padding:24px 40px 56px;}
+.section{margin-bottom:24px;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06),0 4px 14px rgba(0,0,0,.04);border:1px solid var(--border);animation:fadeUp .5s ease both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+.section-header{display:flex;align-items:center;gap:12px;padding:14px 22px;cursor:pointer;user-select:none;transition:filter .2s;}
+.section-header:hover{filter:brightness(1.06);}
+.section-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;background:rgba(255,255,255,.15);}
+.section-title{flex:1;font-weight:600;font-size:13px;color:#fff;}
+.section-week{font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.1em;}
+.section-count{font-size:11px;font-weight:600;background:rgba(255,255,255,.15);color:#fff;border-radius:999px;padding:2px 9px;}
+.chevron{color:rgba(255,255,255,.7);font-size:11px;transition:transform .3s;}
+.section.collapsed .chevron{transform:rotate(-90deg);}
+.section.collapsed .items-wrap{display:none;}
+.theme-navy .section-header{background:linear-gradient(135deg,#1a3a6e,#0f2756);}
+.theme-teal .section-header{background:linear-gradient(135deg,#0d9488,#0a7a71);}
+.theme-orange .section-header{background:linear-gradient(135deg,#ea580c,#c2410c);}
+.theme-amber .section-header{background:linear-gradient(135deg,#d97706,#b45309);}
+.theme-green .section-header{background:linear-gradient(135deg,#16a34a,#15803d);}
+.theme-dark .section-header{background:linear-gradient(135deg,#374151,#1f2937);}
+
+/* TABLE */
+.items-wrap{background:var(--card);}
+.table-head,.item-row{display:grid;grid-template-columns:44px 1fr 1.6fr 110px 96px 126px 42px 155px;padding:9px 22px;gap:9px;}
+.table-head{background:var(--light);border-bottom:1px solid var(--border);}
+.item-row{border-bottom:1px solid var(--border);align-items:start;transition:background .15s;}
+.item-row:last-child{border-bottom:none;}
+.item-row:hover{background:var(--light);}
+.th{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);}
+.th.center{text-align:center;}
+.item-num{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:var(--accent);text-align:center;padding-top:2px;}
+.item-tema{font-weight:600;font-size:12px;color:var(--text);padding-top:2px;line-height:1.35;}
+.item-desc{font-size:11px;color:var(--muted);line-height:1.5;padding-top:2px;}
+.item-date input{width:100%;border:1px solid var(--border);border-radius:7px;padding:5px 8px;font-size:11px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;background:var(--surface);}
+.item-date input:focus{border-color:var(--accent);}
+.check-cell{display:flex;align-items:flex-start;justify-content:center;padding-top:3px;}
+.check-btn{width:25px;height:25px;border-radius:7px;border:2px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .2s;color:transparent;}
+.check-btn:hover{border-color:var(--accent);background:var(--light);}
+.check-btn.checked{background:var(--green);border-color:var(--green);color:#fff;}
+.result-select{width:100%;border:1px solid var(--border);border-radius:7px;padding:5px 7px;font-size:11px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;cursor:pointer;background:var(--surface);-webkit-appearance:none;}
+.result-select.aprobado{background:#dcfce7;border-color:#86efac;color:#15803d;}
+.result-select.proceso{background:#fef9c3;border-color:#fde047;color:#a16207;}
+.result-select.no-aprobado{background:#fee2e2;border-color:#fca5a5;color:#b91c1c;}
+.obs-input{width:100%;border:1px solid var(--border);border-radius:7px;padding:5px 8px;font-size:11px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;resize:vertical;min-height:32px;background:var(--surface);}
+.obs-input:focus{border-color:var(--accent);}
+
+/* SEMÁFORO */
+.semaforo-cell{display:flex;align-items:flex-start;justify-content:center;padding-top:5px;}
+.semaforo{width:13px;height:13px;border-radius:50%;flex-shrink:0;border:2px solid rgba(0,0,0,.1);cursor:help;}
+.sem-verde{background:#16a34a;}
+.sem-amarillo{background:#eab308;}
+.sem-rojo{background:#dc2626;}
+.sem-gris{background:#cbd5e1;}
+
+/* LEGEND */
+.legend{display:flex;gap:12px;flex-wrap:wrap;padding:18px 40px;background:var(--card);border-top:1px solid var(--border);align-items:center;}
+.legend-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-right:3px;}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text);}
+.legend-dot{width:9px;height:9px;border-radius:3px;flex-shrink:0;}
+
+/* FIRMA */
+.firma-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:26px 40px;background:var(--surface);border-top:1px solid var(--border);max-width:1200px;margin:0 auto;}
+.firma-box{border:1px dashed #cbd5e1;border-radius:10px;padding:20px;text-align:center;}
+.firma-line{width:80%;height:1px;background:var(--border);margin:34px auto 9px;}
+.firma-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;}
+
+/* PRINT BTN */
+.print-btn{position:fixed;top:16px;right:20px;background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:9px;padding:8px 14px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .2s;z-index:400;}
+.print-btn:hover{background:rgba(255,255,255,.2);}
+/* SAVE BAR */
+.save-bar{position:fixed;bottom:0;left:0;right:0;background:#0a1628;border-top:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:space-between;padding:9px 24px;z-index:300;gap:10px;flex-wrap:wrap;}
+.save-bar-left{display:flex;align-items:center;gap:14px;flex:1;min-width:0;}
+.save-status{display:flex;align-items:center;gap:7px;font-size:11px;color:rgba(255,255,255,.45);font-family:'DM Sans',sans-serif;white-space:nowrap;}
+.save-dot{width:7px;height:7px;border-radius:50%;background:#475569;flex-shrink:0;transition:background .3s;}
+.save-status.unsaved .save-dot{background:#d97706;animation:blink .9s infinite;}
+.save-status.unsaved{color:rgba(255,255,255,.75);}
+.save-status.syncing .save-dot{background:#3b82f6;animation:blink .6s infinite;}
+.save-status.syncing{color:#93c5fd;}
+.save-status.synced .save-dot{background:#16a34a;}
+.save-status.synced{color:#86efac;}
+.save-status.error .save-dot{background:#dc2626;}
+.save-status.error{color:#fca5a5;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+.save-hint{font-size:10px;color:rgba(255,255,255,.28);font-family:'DM Sans',sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.save-bar-right{display:flex;align-items:center;gap:7px;flex-shrink:0;}
+/* user pill */
+.ms-user{display:flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);font-size:11px;color:rgba(255,255,255,.7);font-family:'DM Sans',sans-serif;white-space:nowrap;}
+.ms-avatar{width:22px;height:22px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0;}
+/* buttons */
+.btn-ms{display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:9px;background:#fff;color:#1a1a1a;border:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;box-shadow:0 1px 4px rgba(0,0,0,.3);}
+.btn-ms:hover{background:#f0f0f0;transform:translateY(-1px);}
+.btn-ms svg{flex-shrink:0;}
+.btn-save-sp{display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:9px;background:#0078d4;color:#fff;border:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;box-shadow:0 2px 8px rgba(0,120,212,.4);}
+.btn-save-sp:hover{background:#106ebe;transform:translateY(-1px);}
+.btn-save-sp:disabled{background:#334155;box-shadow:none;cursor:default;transform:none;opacity:.6;}
+.btn-load-sp{display:flex;align-items:center;gap:6px;padding:8px 13px;border-radius:9px;background:rgba(255,255,255,.07);color:rgba(255,255,255,.65);border:1px solid rgba(255,255,255,.14);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;}
+.btn-load-sp:hover{background:rgba(255,255,255,.13);color:#fff;}
+.btn-load-sp:disabled{opacity:.35;cursor:default;}
+.btn-reset{display:flex;align-items:center;gap:5px;padding:8px 11px;border-radius:9px;background:transparent;color:rgba(220,38,38,.55);border:1px solid rgba(220,38,38,.18);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;}
+.btn-reset:hover{background:rgba(220,38,38,.1);color:#dc2626;}
+/* setup modal */
+.setup-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);z-index:2000;display:none;align-items:center;justify-content:center;}
+.setup-overlay.open{display:flex;}
+.setup-box{background:#fff;border-radius:18px;padding:32px;width:100%;max-width:480px;box-shadow:0 24px 80px rgba(0,0,0,.3);animation:modalIn .25s ease;}
+.setup-box h3{font-family:'DM Serif Display',serif;font-size:22px;color:var(--text);margin-bottom:4px;}
+.setup-box p{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.6;}
+.setup-field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+.setup-field label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);}
+.setup-field input{border:1.5px solid var(--border);border-radius:9px;padding:9px 12px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;transition:border-color .2s;}
+.setup-field input:focus{border-color:#0078d4;}
+.setup-hint{font-size:11px;color:var(--muted);background:var(--light);border-radius:8px;padding:10px 13px;margin-bottom:18px;line-height:1.6;}
+.setup-hint code{font-family:'JetBrains Mono',monospace;font-size:10px;background:#e2e8f8;padding:1px 5px;border-radius:4px;}
+.setup-actions{display:flex;gap:9px;justify-content:flex-end;}
+body{padding-bottom:62px;}
+
+/* METRICS PAGE */
+.metrics-wrap{max-width:1200px;margin:0 auto;padding:26px 40px 56px;}
+.metrics-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;}
+.metrics-toolbar h2{font-family:'DM Serif Display',serif;font-size:22px;color:var(--text);}
+.metrics-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.search-wrap{position:relative;min-width:200px;}
+.search-wrap input{width:100%;border:1px solid var(--border);border-radius:9px;padding:8px 12px 8px 33px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;background:var(--card);}
+.search-wrap input:focus{border-color:var(--accent);}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--muted);}
+.filter-chips{display:flex;gap:6px;}
+.chip{padding:7px 13px;border-radius:999px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--muted);transition:all .2s;}
+.chip.active-all{background:var(--light);border-color:var(--border);color:var(--text);}
+.chip.active-ni{background:#eff6ff;border-color:#93c5fd;color:var(--accent);}
+.chip.active-ref{background:#fff7ed;border-color:#fdba74;color:var(--orange);}
+.btn-excel{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:9px;background:#16a34a;color:#fff;border:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;box-shadow:0 2px 8px rgba(22,163,74,.3);}
+.btn-excel:hover{background:#15803d;transform:translateY(-1px);}
+
+.metrics-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.13em;color:var(--muted);margin:22px 0 10px;padding-bottom:7px;border-bottom:1px solid var(--border);}
+.metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:10px;}
+.metric-card{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.05);position:relative;overflow:hidden;}
+.metric-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:13px 13px 0 0;}
+.mc-blue::before{background:var(--accent);}
+.mc-teal::before{background:var(--teal);}
+.mc-green::before{background:var(--green);}
+.mc-orange::before{background:var(--orange);}
+.mc-red::before{background:var(--red);}
+.mc-amber::before{background:var(--amber);}
+.mc-purple::before{background:#7c3aed;}
+.metric-icon{font-size:20px;margin-bottom:9px;display:block;}
+.metric-val{font-family:'DM Serif Display',serif;font-size:32px;line-height:1;color:var(--text);margin-bottom:2px;}
+.metric-val span{font-size:17px;color:var(--muted);}
+.metric-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;}
+.metric-sub{font-size:10px;color:var(--muted);margin-top:3px;}
+
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+.chart-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:7px;}
+.donut-wrap{display:flex;align-items:center;gap:20px;}
+.donut-legend{display:flex;flex-direction:column;gap:8px;flex:1;}
+.donut-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text);}
+.donut-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.donut-pct{font-weight:700;font-family:'JetBrains Mono',monospace;font-size:11px;margin-left:auto;}
+.bar-chart{display:flex;flex-direction:column;gap:9px;}
+.bar-item{display:grid;grid-template-columns:130px 1fr 44px;align-items:center;gap:7px;}
+.bar-name{font-size:11px;color:var(--muted);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bar-track{height:8px;background:var(--light);border-radius:999px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:999px;transition:width 1s ease;}
+.bar-num{font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--muted);text-align:right;}
+
+.sheet-list{background:var(--card);border:1px solid var(--border);border-radius:13px;overflow:hidden;margin-bottom:20px;}
+.sheet-list-header{padding:13px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.sheet-list-title{font-size:13px;font-weight:700;color:var(--text);}
+.sheet-row{display:grid;grid-template-columns:1.4fr 100px 72px 72px 80px 65px 65px 88px;padding:11px 20px;gap:9px;border-bottom:1px solid var(--border);align-items:center;font-size:12px;transition:background .15s;}
+.sheet-row:last-child{border-bottom:none;}
+.sheet-row:hover{background:var(--light);}
+.header-row{background:var(--light);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);}
+.hidden-row{display:none!important;}
+.sheet-name{font-weight:600;color:var(--text);}
+.sheet-badge{display:inline-flex;align-items:center;justify-content:center;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:600;}
+.badge-green{background:#dcfce7;color:#15803d;}
+.badge-yellow{background:#fef9c3;color:#a16207;}
+.badge-gray{background:var(--light);color:var(--muted);}
+.badge-blue{background:#eff6ff;color:var(--accent);}
+.badge-orange{background:#fff7ed;color:var(--orange);}
+
+.empty-state{padding:36px 20px;text-align:center;color:var(--muted);}
+.empty-state .ei{font-size:36px;margin-bottom:9px;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);z-index:1000;display:none;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--card);border-radius:18px;padding:28px;width:100%;max-width:520px;box-shadow:0 24px 80px rgba(0,0,0,.25);animation:modalIn .25s ease;max-height:90vh;overflow-y:auto;}
+@keyframes modalIn{from{opacity:0;transform:scale(.93) translateY(10px);}to{opacity:1;transform:none;}}
+.modal h3{font-family:'DM Serif Display',serif;font-size:21px;color:var(--text);margin-bottom:4px;}
+.modal-sub{font-size:12px;color:var(--muted);margin-bottom:20px;}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.modal-field{display:flex;flex-direction:column;gap:4px;}
+.modal-field.full{grid-column:1/-1;}
+.modal-field label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);}
+.modal-field input,.modal-field select{border:1px solid var(--border);border-radius:9px;padding:8px 11px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;background:var(--surface);width:100%;transition:border-color .2s;}
+.modal-field input:focus,.modal-field select:focus{border-color:var(--accent);}
+.tipo-radio{display:flex;gap:9px;margin-top:3px;}
+.tipo-opt{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px;border:2px solid var(--border);border-radius:9px;cursor:pointer;font-size:12px;font-weight:600;transition:all .2s;color:var(--muted);}
+.tipo-opt.sel-ni{border-color:var(--accent);background:#eff6ff;color:var(--accent);}
+.tipo-opt.sel-ref{border-color:var(--orange);background:#fff7ed;color:var(--orange);}
+.modal-actions{display:flex;gap:9px;margin-top:20px;justify-content:flex-end;}
+.btn{padding:8px 18px;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .2s;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:#1d4ed8;}
+.btn-ghost{background:var(--light);color:var(--muted);}
+.btn-ghost:hover{background:var(--border);}
+
+@media print{
+  .print-btn,.tabs-bar,.metrics-actions,.modal-overlay{display:none!important;}
+  .page{display:block!important;}
+  .page#page-metrics{display:none!important;}
+  body{background:#fff;}
+  .section{box-shadow:none;break-inside:avoid;}
+  .section.collapsed .items-wrap{display:block!important;}
+  .info-grid,.stats-bar{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .section-header{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .main{padding:16px;}
+}
+@media(max-width:900px){
+  .hero,.info-grid,.stats-bar,.main,.legend,.firma-grid,.metrics-wrap{padding-left:16px;padding-right:16px;}
+  .table-head,.item-row{grid-template-columns:40px 1fr 1fr!important;}
+  .table-head .th:nth-child(n+4),.item-row>*:nth-child(n+4){display:none!important;}
+  .firma-grid,.charts-row{grid-template-columns:1fr;}
+  .sheet-row{grid-template-columns:1.2fr 90px 65px!important;}
+  .sheet-row>*:nth-child(n+4){display:none!important;}
+  .tabs-bar{padding:0 12px;}
+  .modal-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-tag">Capacitación Técnica</div>
+  <h1>Checklist de <em>Capacitación</em><br>del Colaborador</h1>
+  <p class="hero-sub">Módulo técnico · Registro de avance, evaluación y métricas en tiempo real</p>
+</div>
+
+<div class="tabs-bar" id="tabs-bar"></div>
+
+<!-- TEMPLATE -->
+<template id="checklist-tpl">
+  <div class="info-grid">
+    <div class="info-field"><label>Nombre completo</label><input type="text" class="f-nombre" placeholder="Nombre del colaborador"></div>
+    <div class="info-field"><label>Núm. de empleado</label><input type="text" class="f-numemp" placeholder="Ej. EMP-0042"></div>
+    <div class="info-field"><label>Puesto</label><input type="text" class="f-puesto" placeholder="Ej. Agente técnico"></div>
+    <div class="info-field"><label>Capacitador</label><input type="text" class="f-capacitador" placeholder="Nombre del capacitador"></div>
+    <div class="info-field"><label>Módulo / Sucursal</label><input type="text" class="f-modulo" placeholder="Ej. Módulo Centro"></div>
+    <div class="info-field"><label>Fecha de ingreso</label><input type="date" class="f-ingreso"></div>
+    <div class="info-field"><label>Fecha inicio capacitación</label><input type="date" class="f-inicio"></div>
+    <div class="info-field"><label>Fecha término estimada</label><input type="date" class="f-termino"></div>
+    <div class="info-field">
+      <label>Tipo de capacitación</label>
+      <select class="f-tipo">
+        <option value="nuevo-ingreso">🆕 Nuevo ingreso</option>
+        <option value="reforzamiento">🔁 Reforzamiento</option>
+      </select>
+    </div>
+    <div class="info-field f-motivo-wrap" style="display:none">
+      <label>Motivo de reforzamiento</label>
+      <input type="text" class="f-motivo" placeholder="Describe el motivo">
+    </div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat"><span class="stat-num total-n">37</span><span class="stat-label">Total</span></div>
+    <div class="stat"><span class="stat-num ev-n" style="color:var(--teal)">0</span><span class="stat-label">Evaluados</span></div>
+    <div class="stat"><span class="stat-num ap-n" style="color:var(--green)">0</span><span class="stat-label">Aprobados</span></div>
+    <div class="stat"><span class="stat-num pr-n" style="color:var(--amber)">0</span><span class="stat-label">En proceso</span></div>
+    <div class="stat"><span class="stat-num no-n" style="color:var(--red)">0</span><span class="stat-label">No aprobados</span></div>
+    <div class="stat"><span class="stat-num pend-n" style="color:var(--orange)">37</span><span class="stat-label">Pendientes</span></div>
+    <div class="progress-wrap">
+      <div class="progress-label"><span>Progreso general</span><span class="pct-txt">0%</span></div>
+      <div class="progress-bar-track"><div class="progress-bar-fill"></div></div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="section theme-navy s1">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-icon">📋</div><span class="section-week">Semana 1</span>
+        <span class="section-title">Inducción y Fundamentos</span><span class="section-count">15 temas</span><span class="chevron">▾</span>
+      </div>
+      <div class="items-wrap">
+        <div class="table-head"><span class="th center">#</span><span class="th">Tema</span><span class="th">Descripción</span><span class="th center">Fecha</span><span class="th center">Evaluado</span><span class="th center">Resultado</span><span class="th center">🚦</span><span class="th">Observaciones</span></div>
+        <div class="rows-s1"></div>
+      </div>
+    </div>
+    <div class="section theme-teal s2">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-icon">🔬</div><span class="section-week">Semana 1</span>
+        <span class="section-title">Laboratorio Mr. Fix</span><span class="section-count">6 temas</span><span class="chevron">▾</span>
+      </div>
+      <div class="items-wrap">
+        <div class="table-head"><span class="th center">#</span><span class="th">Tema</span><span class="th">Descripción</span><span class="th center">Fecha</span><span class="th center">Evaluado</span><span class="th center">Resultado</span><span class="th center">🚦</span><span class="th">Observaciones</span></div>
+        <div class="rows-s2"></div>
+      </div>
+    </div>
+    <div class="section theme-navy s3">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-icon">🖥️</div><span class="section-week">Semana 1</span>
+        <span class="section-title">Plataformas y Procesos</span><span class="section-count">4 temas</span><span class="chevron">▾</span>
+      </div>
+      <div class="items-wrap">
+        <div class="table-head"><span class="th center">#</span><span class="th">Tema</span><span class="th">Descripción</span><span class="th center">Fecha</span><span class="th center">Evaluado</span><span class="th center">Resultado</span><span class="th center">🚦</span><span class="th">Observaciones</span></div>
+        <div class="rows-s3"></div>
+      </div>
+    </div>
+    <div class="section theme-dark s4">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-icon">📝</div><span class="section-week">Semana 1</span>
+        <span class="section-title">Evaluación</span><span class="section-count">2 temas</span><span class="chevron">▾</span>
+      </div>
+      <div class="items-wrap">
+        <div class="table-head"><span class="th center">#</span><span class="th">Tema</span><span class="th">Descripción</span><span class="th center">Fecha</span><span class="th center">Evaluado</span><span class="th center">Resultado</span><span class="th center">🚦</span><span class="th">Observaciones</span></div>
+        <div class="rows-s4"></div>
+      </div>
+    </div>
+    <div class="section theme-orange s5">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-icon">⚙️</div><span class="section-week">Semana 2</span>
+        <span class="section-title">Procesos Avanzados</span><span class="section-count">4 temas</span><span class="chevron">▾</span>
+      </div>
+      <div class="items-wrap">
+        <div class="table-head"><span class="th center">#</span><span class="th">Tema</span><span class="th">Descripción</span><span class="th center">Fecha</span><span class="th center">Evaluado</span><span class="th center">Resultado</span><span class="th center">🚦</span><span class="th">Observaciones</span></div>
+        <div class="rows-s5"></div>
+      </div>
+    </div>
+    <div class="section theme-green s6">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-icon">🔄</div><span class="section-week">Semana 2</span>
+        <span class="section-title">Reforzamientos y Seguimiento</span><span class="section-count">6 temas</span><span class="chevron">▾</span>
+      </div>
+      <div class="items-wrap">
+        <div class="table-head"><span class="th center">#</span><span class="th">Tema</span><span class="th">Descripción</span><span class="th center">Fecha</span><span class="th center">Evaluado</span><span class="th center">Resultado</span><span class="th center">🚦</span><span class="th">Observaciones</span></div>
+        <div class="rows-s6"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span class="legend-title">Resultados:</span>
+    <div class="legend-item"><div class="legend-dot" style="background:#16a34a"></div>Aprobado</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#d97706"></div>En proceso</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#dc2626"></div>No aprobado</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#cbd5e1"></div>Pendiente</div>
+    <span class="legend-title" style="margin-left:14px;">Semáforo (plazo por semana):</span>
+    <div class="legend-item"><div class="legend-dot" style="background:#16a34a;border-radius:50%"></div>A tiempo</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#eab308;border-radius:50%"></div>Por vencer (≤2 días)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#dc2626;border-radius:50%"></div>Vencido</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#cbd5e1;border-radius:50%"></div>Sin fecha inicio</div>
+  </div>
+
+  <div class="firma-grid">
+    <div class="firma-box"><div class="firma-line"></div><div class="firma-label">Firma del Colaborador</div></div>
+    <div class="firma-box"><div class="firma-line"></div><div class="firma-label">Firma del Capacitador / Gerente Regional</div></div>
+  </div>
+</template>
+
+<!-- METRICS PAGE -->
+<div class="page" id="page-metrics">
+<div class="metrics-wrap">
+  <div class="metrics-toolbar">
+    <h2>📊 Panel de Métricas</h2>
+    <div class="metrics-actions">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" placeholder="Buscar colaborador..." oninput="filterTable()">
+      </div>
+      <div class="filter-chips">
+        <button class="chip active-all" id="chip-all" onclick="setFilter('all')">Todos</button>
+        <button class="chip" id="chip-ni" onclick="setFilter('nuevo-ingreso')">🆕 Nuevo ingreso</button>
+        <button class="chip" id="chip-ref" onclick="setFilter('reforzamiento')">🔁 Reforzamiento</button>
+      </div>
+      <button class="btn-excel" onclick="exportExcel()">📥 Descargar Excel</button>
+    </div>
+  </div>
+
+  <div class="metrics-section-title">General</div>
+  <div class="metrics-grid">
+    <div class="metric-card mc-blue"><span class="metric-icon">👥</span><div class="metric-val" id="m-total">0</div><div class="metric-label">Colaboradores</div><div class="metric-sub">Hojas activas</div></div>
+    <div class="metric-card mc-teal"><span class="metric-icon">✅</span><div class="metric-val"><span id="m-prom-eval">0</span><span>%</span></div><div class="metric-label">Promedio evaluación</div></div>
+    <div class="metric-card mc-green"><span class="metric-icon">🏆</span><div class="metric-val"><span id="m-prom-apro">0</span><span>%</span></div><div class="metric-label">Tasa aprobación</div></div>
+    <div class="metric-card mc-orange"><span class="metric-icon">⏳</span><div class="metric-val" id="m-pend">0</div><div class="metric-label">Pendientes totales</div></div>
+    <div class="metric-card mc-red"><span class="metric-icon">❌</span><div class="metric-val" id="m-no">0</div><div class="metric-label">No aprobados</div></div>
+    <div class="metric-card mc-amber"><span class="metric-icon">⚡</span><div class="metric-val" id="m-proc">0</div><div class="metric-label">En proceso</div></div>
+  </div>
+
+  <div class="metrics-section-title">🆕 Nuevo Ingreso</div>
+  <div class="metrics-grid">
+    <div class="metric-card mc-blue"><span class="metric-icon">👤</span><div class="metric-val" id="ni-total">0</div><div class="metric-label">Colaboradores</div></div>
+    <div class="metric-card mc-green"><span class="metric-icon">🏆</span><div class="metric-val"><span id="ni-apro">0</span><span>%</span></div><div class="metric-label">Tasa aprobación</div></div>
+    <div class="metric-card mc-teal"><span class="metric-icon">📈</span><div class="metric-val"><span id="ni-prom">0</span><span>%</span></div><div class="metric-label">Avance promedio</div></div>
+    <div class="metric-card mc-red"><span class="metric-icon">⚠️</span><div class="metric-val" id="ni-no">0</div><div class="metric-label">No aprobados</div></div>
+  </div>
+
+  <div class="metrics-section-title">🔁 Reforzamiento</div>
+  <div class="metrics-grid">
+    <div class="metric-card mc-orange"><span class="metric-icon">👤</span><div class="metric-val" id="ref-total">0</div><div class="metric-label">Colaboradores</div></div>
+    <div class="metric-card mc-green"><span class="metric-icon">🏆</span><div class="metric-val"><span id="ref-apro">0</span><span>%</span></div><div class="metric-label">Tasa aprobación</div></div>
+    <div class="metric-card mc-amber"><span class="metric-icon">📈</span><div class="metric-val"><span id="ref-prom">0</span><span>%</span></div><div class="metric-label">Avance promedio</div></div>
+    <div class="metric-card mc-red"><span class="metric-icon">⚠️</span><div class="metric-val" id="ref-no">0</div><div class="metric-label">No aprobados</div></div>
+  </div>
+
+  <div class="charts-row">
+    <div class="chart-card">
+      <div class="chart-title">📊 Distribución de Resultados</div>
+      <div class="donut-wrap">
+        <svg width="130" height="130" viewBox="0 0 130 130">
+          <circle cx="65" cy="65" r="50" fill="none" stroke="#f1f5fb" stroke-width="20"/>
+          <circle id="d-apro" cx="65" cy="65" r="50" fill="none" stroke="#16a34a" stroke-width="20" stroke-dasharray="0 314.2" transform="rotate(-90 65 65)" style="transition:stroke-dasharray 1s ease"/>
+          <circle id="d-proc" cx="65" cy="65" r="50" fill="none" stroke="#d97706" stroke-width="20" stroke-dasharray="0 314.2" transform="rotate(-90 65 65)" style="transition:stroke-dasharray 1s ease"/>
+          <circle id="d-no"   cx="65" cy="65" r="50" fill="none" stroke="#dc2626" stroke-width="20" stroke-dasharray="0 314.2" transform="rotate(-90 65 65)" style="transition:stroke-dasharray 1s ease"/>
+          <text x="65" y="61" text-anchor="middle" font-family="DM Serif Display,serif" font-size="20" fill="#1e293b" id="donut-ctr">0%</text>
+          <text x="65" y="75" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="8" fill="#64748b">aprobado</text>
+        </svg>
+        <div class="donut-legend">
+          <div class="donut-item"><div class="donut-dot" style="background:#16a34a"></div><span>Aprobado</span><span class="donut-pct" id="pct-apro">0%</span></div>
+          <div class="donut-item"><div class="donut-dot" style="background:#d97706"></div><span>En proceso</span><span class="donut-pct" id="pct-proc">0%</span></div>
+          <div class="donut-item"><div class="donut-dot" style="background:#dc2626"></div><span>No aprobado</span><span class="donut-pct" id="pct-no">0%</span></div>
+          <div class="donut-item"><div class="donut-dot" style="background:#cbd5e1"></div><span>Pendiente</span><span class="donut-pct" id="pct-pend">0%</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">📚 Avance por Sección <small style="font-size:10px;color:var(--muted);font-weight:400;">(promedio)</small></div>
+      <div class="bar-chart" id="bar-secciones"></div>
+    </div>
+  </div>
+
+  <div class="sheet-list">
+    <div class="sheet-list-header">
+      <span class="sheet-list-title">📋 Registro por Colaborador</span>
+      <span id="colabs-count" style="font-size:11px;color:var(--muted)">0 registros</span>
+    </div>
+    <div class="sheet-row header-row">
+      <span>Colaborador</span><span>Tipo</span><span>Evaluados</span>
+      <span>Aprobados</span><span>No aprobados</span><span>En proc.</span>
+      <span>Avance</span><span>Estado</span>
+    </div>
+    <div id="colabs-body">
+      <div class="empty-state"><div class="ei">📂</div><p>Agrega hojas de colaboradores para ver el registro</p></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="outsideClose(event)">
+  <div class="modal">
+    <h3>Nueva Hoja de Capacitación</h3>
+    <p class="modal-sub">Completa los datos del colaborador.</p>
+    <div class="modal-grid">
+      <div class="modal-field full">
+        <label>Tipo de capacitación</label>
+        <div class="tipo-radio">
+          <label class="tipo-opt sel-ni" id="opt-ni" onclick="selectTipo('nuevo-ingreso')">🆕 Nuevo ingreso</label>
+          <label class="tipo-opt" id="opt-ref" onclick="selectTipo('reforzamiento')">🔁 Reforzamiento</label>
+        </div>
+      </div>
+      <div class="modal-field"><label>Nombre completo</label><input type="text" id="m-nombre" placeholder="Nombre del colaborador"></div>
+      <div class="modal-field"><label>Núm. de empleado</label><input type="text" id="m-numemp" placeholder="Ej. EMP-0042"></div>
+      <div class="modal-field"><label>Puesto</label><input type="text" id="m-puesto" placeholder="Ej. Agente técnico"></div>
+      <div class="modal-field"><label>Capacitador</label><input type="text" id="m-capacitador" placeholder="Nombre del capacitador"></div>
+      <div class="modal-field"><label>Módulo / Sucursal</label><input type="text" id="m-modulo" placeholder="Ej. Módulo Centro"></div>
+      <div class="modal-field"><label>Fecha de ingreso</label><input type="date" id="m-ingreso"></div>
+      <div class="modal-field"><label>Fecha inicio capacitación</label><input type="date" id="m-inicio"></div>
+      <div class="modal-field full" id="m-motivo-wrap" style="display:none">
+        <label>Motivo de reforzamiento</label>
+        <input type="text" id="m-motivo" placeholder="Describe el motivo del reforzamiento">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="createSheetFromModal()">Crear hoja</button>
+    </div>
+  </div>
+</div>
+
+<button class="print-btn" onclick="window.print()">🖨️ Imprimir</button>
+
+<!-- SETUP MODAL (Client ID) -->
+<div class="setup-overlay" id="setup-overlay">
+  <div class="setup-box">
+    <h3>⚙️ Configurar SharePoint</h3>
+    <p>Para conectar con SharePoint necesitas un <strong>Application (Client) ID</strong> de Azure. Solo se configura una vez.</p>
+    <div class="setup-hint">
+      <strong>Cómo obtenerlo (5 min):</strong><br>
+      1. Entra a <code>portal.azure.com</code> → <strong>Registros de aplicaciones</strong> → Nueva<br>
+      2. Nombre: <em>Checklist Capacitación</em> · Cuentas: <em>Cualquier directorio organizacional</em><br>
+      3. URI de redirección → tipo <strong>Aplicación de página única (SPA)</strong> → valor: <code id="redirect-uri-hint"></code><br>
+      4. Copiar el <strong>Id. de aplicación (cliente)</strong><br>
+      5. Permisos de API → Agregar → Microsoft Graph → Permisos delegados → <code>Files.ReadWrite</code> + <code>User.Read</code><br>
+      <br>
+      ⚠️ <strong>Para SharePoint:</strong> En Autenticación, activa también <em>"Tokens de acceso"</em> y <em>"Tokens de id."</em> bajo "Concesión implícita".
+    </div>
+    <div class="setup-field">
+      <label>Application (Client) ID</label>
+      <input type="text" id="setup-client-id" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+    </div>
+    <div class="setup-field">
+      <label>Nombre del archivo en OneDrive (opcional)</label>
+      <input type="text" id="setup-filename" placeholder="avances_capacitacion.json" value="avances_capacitacion.json">
+    </div>
+    <div class="setup-actions">
+      <button class="btn btn-ghost" onclick="closeSetup()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveSetup()">Guardar configuración</button>
+    </div>
+  </div>
+</div>
+
+<!-- SAVE BAR -->
+<div class="save-bar">
+  <div class="save-bar-left">
+    <div class="save-status" id="save-status">
+      <span class="save-dot"></span>
+      <span id="save-txt">Sin cambios</span>
+    </div>
+    <span class="save-hint" id="save-hint">Conéctate con Microsoft para guardar en SharePoint/OneDrive</span>
+  </div>
+  <div class="save-bar-right">
+    <button class="btn-reset" onclick="clearAllData()" title="Reiniciar todo">↺ Reiniciar</button>
+    <button class="btn-load-sp" id="btn-load" onclick="loadFromSP()" disabled title="Cargar avances desde SharePoint">⬇️ Cargar</button>
+    <button class="btn-save-sp" id="btn-save-sp" onclick="saveToSP()" disabled>⬆️ Guardar en SharePoint</button>
+    <div id="ms-user-area">
+      <button class="btn-ms" onclick="signIn()" id="btn-signin">
+        <svg width="16" height="16" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+        Conectar con Microsoft
+      </button>
+    </div>
+    <button style="background:transparent;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:16px;padding:4px 6px;" title="Configurar Client ID" onclick="openSetup()">⚙️</button>
+  </div>
+</div>
+
+<!-- RENAME MODAL -->
+<div class="rename-overlay" id="rename-overlay" onclick="outsideRenameClose(event)">
+  <div class="rename-box">
+    <h4>✏️ Renombrar hoja</h4>
+    <p>Escribe el nuevo nombre para esta hoja de colaborador.</p>
+    <input type="text" id="rename-input" placeholder="Nombre del colaborador..." onkeydown="if(event.key==='Enter') confirmRename()">
+    <div class="rename-actions">
+      <button class="btn btn-ghost" onclick="closeRename()">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmRename()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ========== DATA ========== */
+const SD={
+  s1:[
+    [1,"Inducción al módulo","Información general de capacitaciones, expectativas del colaborador y empresa.",1],
+    [2,"Licenciamiento de software","Licencias: Office 365, versiones permanentes, antivirus Kaspersky, McAfee y Norton.",1],
+    [3,"Productos y cotizador AMS","Productos en lista de precios, garantías y procesos del cotizador AMS.",1],
+    [4,"Intelisis (Ventas)","Ingreso a Intelisis, capturas de ventas directas y adjuntar evidencia.",1],
+    [5,"Intelisis (Tickets)","Proceso de alta de tickets en Intelisis para las distintas áreas.",1],
+    [6,"Instalación de dispositivos","Configuración e instalación de dispositivos externos a un equipo.",1],
+    [7,"Configuración de equipo nuevo","Configuración de equipo de cómputo nuevo e importancia del proceso.",1],
+    [8,"Instalación y activación","Proceso de instalación, configuración y activación de un programa.",1],
+    [9,"Compatibilidad de piezas","Criterios para verificar compatibilidad de piezas en laptop y PC.",1],
+    [10,"Reseteo de contraseñas","Procedimiento para restablecer una contraseña de Windows.",1],
+    [11,"Recuperación de archivos","Método teórico para recuperar archivos eliminados en un equipo.",1],
+    [12,"Inventarios","Herramientas, equipos, documentos, stock y materiales del módulo.",1],
+    [13,"Kardex","Importancia del Kardex en el módulo y práctica del proceso completo.",1],
+    [14,"Ticket vs Inventario","Importancia del Ticket vs Inventario en el módulo y práctica.",1],
+    [15,"Órdenes de servicio","Ejercicios prácticos para crear una orden de servicio y sus movimientos.",1],
+  ],
+  s2:[
+    [16,"Laboratorio Mr. Fix – Introducción","Ventajas del laboratorio técnico para problemas de mayor complejidad.",1],
+    [17,"Paquetes de reparación","Diversos paquetes de reparación que ofrece el laboratorio.",1],
+    [18,"Cotización con gerente de laboratorio","Cómo solicitar cotización con el gerente de laboratorio.",1],
+    [19,"Paquetes de mejora de rendimiento","Paquetes de mejora de rendimiento realizados en laboratorio.",1],
+    [20,"Envío a laboratorio en Intelisis","Prueba del proceso completo de envío de equipos a laboratorio.",1],
+    [21,"Embalaje y guía de paquetería","Embalaje de equipos y solicitud de guía de paquetería.",1],
+  ],
+  s3:[
+    [22,"TechTailor","Categorías, modelos, funciones de la plataforma y captura en Intelisis.",1],
+    [23,"Procesos HP","Recepción, garantía, herramientas UEFI, diagnósticos e Intelisis.",1],
+    [24,"Reporte semanal","Informe al gerente regional de temas y habilidades. Retroalimentación.",1],
+    [25,"Reforzamiento en plataforma","Videos de apoyo en la plataforma de capacitaciones.",1],
+  ],
+  s4:[
+    [26,"Evaluación","Examen de cada proceso visto y checklist de medición de resultados.",1],
+    [27,"Forms – Evaluación al capacitador","El colaborador evalúa al capacitador mediante Forms.",1],
+  ],
+  s5:[
+    [28,"Proceso de destrucción","Creación de órdenes con movimientos de destrucción.",2],
+    [29,"Proceso de incidencia","Creación de órdenes con movimientos de incidencia.",2],
+    [30,"Proceso de rechazo cliente","Creación de órdenes con movimientos de rechazo cliente.",2],
+    [31,"Proceso de sin fallo","Creación de órdenes con movimientos de sin fallo.",2],
+  ],
+  s6:[
+    [32,"Reforzamiento Lab. – Reparación exitosa","Proceso en Intelisis con resultado de reparación exitosa.",2],
+    [33,"Reforzamiento Lab. – Garantía","Proceso en Intelisis con proceso de garantía de laboratorio.",2],
+    [34,"Reforzamiento Lab. – Irreparable","Proceso en Intelisis con proceso de irreparable.",2],
+    [35,"Reforzamiento Lab. – Rechazo cliente","Proceso en Intelisis con proceso de rechazo cliente.",2],
+    [36,"Reforzamiento HP","Creación de órdenes HP en escenarios ACAS y RCAS.",2],
+    [37,"Seguimiento semana 2","Llamada de seguimiento para consultar dudas y necesidades técnicas.",2],
+  ],
+};
+const SEC_NAMES={s1:'Inducción y Fundamentos',s2:'Laboratorio Mr. Fix',s3:'Plataformas y Procesos',s4:'Evaluación',s5:'Procesos Avanzados',s6:'Reforzamientos'};
+const BAR_COLORS=['#2563eb','#0d9488','#1a3a6e','#374151','#ea580c','#16a34a'];
+const TOTAL=37;
+const CIRC=2*Math.PI*50;
+
+let sheets=[];
+let activeTab=null;
+let tipoFilter='all';
+let tipoModal='nuevo-ingreso';
+
+/* ========== TABS ========== */
+function renderTabs(){
+  const bar=document.getElementById('tabs-bar');
+  bar.innerHTML='';
+  const mt=mkBtn('tab'+(activeTab==='metrics'?' active':''));
+  mt.innerHTML=`<span class="tab-dot" style="background:var(--accent)"></span>📊 Métricas`;
+  mt.onclick=()=>switchTab('metrics');
+  bar.appendChild(mt);
+
+  sheets.forEach(sh=>{
+    const t=mkBtn('tab'+(activeTab===sh.id?' active':''));
+    const st=getStats(sh.pageEl);
+    const dot=st.pct>=100?'#16a34a':st.pct>0?'#d97706':'#94a3b8';
+    const tipo=sh.pageEl.querySelector('.f-tipo').value==='reforzamiento'?'🔁 ':'🆕 ';
+    t.innerHTML=`<span class="tab-dot" style="background:${dot}"></span>${tipo}${sh.name}<span class="tab-badge">${st.pct}%</span><span class="tab-actions"><button class="tab-action-btn" title="Renombrar" onclick="event.stopPropagation();openRename('${sh.id}')">✏️</button><button class="tab-action-btn del" title="Eliminar hoja" onclick="event.stopPropagation();deleteSheet('${sh.id}')">🗑️</button></span>`;
+    t.onclick=()=>switchTab(sh.id);
+    bar.appendChild(t);
+  });
+
+  const add=mkBtn('tab-add');
+  add.innerHTML='＋ Nueva hoja';
+  add.onclick=openModal;
+  bar.appendChild(add);
+}
+function mkBtn(cls){const b=document.createElement('button');b.className=cls;return b;}
+
+function switchTab(id){
+  activeTab=id;
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  if(id==='metrics'){
+    document.getElementById('page-metrics').classList.add('active');
+    renderMetrics();
+  } else {
+    const sh=sheets.find(s=>s.id===id);
+    if(sh) sh.pageEl.classList.add('active');
+  }
+  renderTabs();
+}
+
+/* ========== SEMÁFORO ========== */
+function calcSem(pageEl,semana){
+  const v=pageEl.querySelector('.f-inicio').value;
+  if(!v) return 'gris';
+  const inicio=new Date(v);
+  const hoy=new Date(); hoy.setHours(0,0,0,0);
+  const dias=Math.floor((hoy-inicio)/(86400000));
+  if(dias<0) return 'gris';
+  const limite=semana===1?7:14;
+  const left=limite-dias;
+  if(left>2) return 'verde';
+  if(left>=0) return 'amarillo';
+  return 'rojo';
+}
+
+function updateSemaforos(pageEl){
+  Object.entries(SD).forEach(([sec,rows])=>{
+    rows.forEach(([num,,,semana])=>{
+      const el=pageEl.querySelector(`[data-sem="${num}"]`);
+      if(!el) return;
+      const c=calcSem(pageEl,semana);
+      el.className=`semaforo sem-${c}`;
+      el.title={verde:'✅ A tiempo',amarillo:'⚠️ Por vencer (≤2 días)',rojo:'🔴 Vencido — fuera del plazo de semana '+semana,gris:'Sin fecha de inicio'}[c];
+    });
+  });
+}
+
+/* ========== BUILD ROWS ========== */
+function buildRows(pageEl){
+  Object.entries(SD).forEach(([sec,rows])=>{
+    const c=pageEl.querySelector('.rows-'+sec);
+    if(!c) return;
+    rows.forEach(([num,tema,desc,semana])=>{
+      const row=document.createElement('div');
+      row.className='item-row';
+      row.innerHTML=`
+        <div class="item-num">${String(num).padStart(2,'0')}</div>
+        <div class="item-tema">${tema}</div>
+        <div class="item-desc">${desc}</div>
+        <div class="item-date"><input type="date"></div>
+        <div class="check-cell"><button class="check-btn" title="Marcar evaluado">✓</button></div>
+        <div><select class="result-select">
+          <option value="">— Pendiente</option>
+          <option value="aprobado">✓ Aprobado</option>
+          <option value="proceso">⚡ En proceso</option>
+          <option value="no-aprobado">✗ No aprobado</option>
+        </select></div>
+        <div class="semaforo-cell"><div class="semaforo sem-gris" data-sem="${num}" title="Sin fecha inicio"></div></div>
+        <div><textarea class="obs-input" placeholder="Observaciones..." rows="1"></textarea></div>`;
+      row.querySelector('.check-btn').addEventListener('click',function(){
+        this.classList.toggle('checked');
+        updateStats(pageEl); renderTabs(); scheduleAutoSave();
+      });
+      row.querySelector('.result-select').addEventListener('change',function(){
+        this.className='result-select '+this.value;
+        updateStats(pageEl); renderTabs(); scheduleAutoSave();
+      });
+      row.querySelector('input[type="date"]').addEventListener('change',scheduleAutoSave);
+      row.querySelector('.obs-input').addEventListener('input',scheduleAutoSave);
+      c.appendChild(row);
+    });
+  });
+  updateStats(pageEl);
+  // Wire f-inicio for semaforo
+  pageEl.querySelector('.f-inicio').addEventListener('change',()=>{updateSemaforos(pageEl);scheduleAutoSave();});
+  // Wire all info fields for autosave
+  pageEl.querySelectorAll('.info-grid input,.info-grid select').forEach(el=>{
+    el.addEventListener('input',scheduleAutoSave);
+    el.addEventListener('change',scheduleAutoSave);
+  });
+  // Wire tipo change
+  pageEl.querySelector('.f-tipo').addEventListener('change',function(){
+    const w=pageEl.querySelector('.f-motivo-wrap');
+    if(w) w.style.display=this.value==='reforzamiento'?'block':'none';
+    renderTabs(); scheduleAutoSave();
+  });
+}
+
+/* ========== STATS ========== */
+function getStats(pageEl){
+  let ev=0,ap=0,pr=0,no=0;
+  pageEl.querySelectorAll('.check-btn').forEach(b=>{if(b.classList.contains('checked')) ev++;});
+  pageEl.querySelectorAll('.result-select').forEach(s=>{
+    if(s.value==='aprobado') ap++;
+    else if(s.value==='proceso') pr++;
+    else if(s.value==='no-aprobado') no++;
+  });
+  return{ev,ap,pr,no,pend:TOTAL-ev,pct:Math.round(ev/TOTAL*100)};
+}
+
+function updateStats(pageEl){
+  const s=getStats(pageEl);
+  pageEl.querySelector('.ev-n').textContent=s.ev;
+  pageEl.querySelector('.ap-n').textContent=s.ap;
+  pageEl.querySelector('.pr-n').textContent=s.pr;
+  pageEl.querySelector('.no-n').textContent=s.no;
+  pageEl.querySelector('.pend-n').textContent=s.pend;
+  pageEl.querySelector('.pct-txt').textContent=s.pct+'%';
+  pageEl.querySelector('.progress-bar-fill').style.width=s.pct+'%';
+}
+
+/* ========== SECTION TOGGLE ========== */
+function toggleSection(h){h.closest('.section').classList.toggle('collapsed');}
+
+/* ========== CREATE SHEET ========== */
+function createSheet(o={}){
+  const id=o._id||('sh-'+Date.now());
+  const tpl=document.getElementById('checklist-tpl');
+  const pg=document.createElement('div');
+  pg.className='page'; pg.id=id;
+  pg.appendChild(tpl.content.cloneNode(true));
+  document.body.insertBefore(pg,document.getElementById('page-metrics'));
+
+  const set=(cls,val)=>{if(val!=null){const el=pg.querySelector(cls);if(el) el.value=val;}};
+  set('.f-nombre',o.nombre);set('.f-numemp',o.numEmp);
+  set('.f-puesto',o.puesto);set('.f-capacitador',o.capacitador);
+  set('.f-modulo',o.modulo);set('.f-ingreso',o.ingreso);set('.f-inicio',o.inicio);
+  set('.f-termino',o.termino);set('.f-motivo',o.motivo);
+  if(o.tipo){
+    pg.querySelector('.f-tipo').value=o.tipo;
+    const w=pg.querySelector('.f-motivo-wrap');
+    if(w) w.style.display=o.tipo==='reforzamiento'?'block':'none';
+  }
+
+  buildRows(pg);
+  if(o.inicio) updateSemaforos(pg);
+
+  const name=o.name||o.nombre||('Hoja '+(sheets.length+1));
+  sheets.push({id,name,pageEl:pg});
+  switchTab(id);
+}
+
+/* ========== MODAL ========== */
+function selectTipo(v){
+  tipoModal=v;
+  document.getElementById('opt-ni').className='tipo-opt'+(v==='nuevo-ingreso'?' sel-ni':'');
+  document.getElementById('opt-ref').className='tipo-opt'+(v==='reforzamiento'?' sel-ref':'');
+  document.getElementById('m-motivo-wrap').style.display=v==='reforzamiento'?'block':'none';
+}
+
+function openModal(){
+  selectTipo('nuevo-ingreso');
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('m-nombre').focus(),80);
+}
+
+function closeModal(){
+  document.getElementById('modal-overlay').classList.remove('open');
+  ['m-nombre','m-numemp','m-puesto','m-capacitador','m-modulo','m-ingreso','m-inicio','m-motivo'].forEach(id=>{
+    const el=document.getElementById(id);if(el) el.value='';
+  });
+}
+
+function outsideClose(e){if(e.target===document.getElementById('modal-overlay')) closeModal();}
+
+function createSheetFromModal(){
+  createSheet({
+    nombre:document.getElementById('m-nombre').value.trim(),
+    numEmp:document.getElementById('m-numemp').value.trim(),
+    puesto:document.getElementById('m-puesto').value.trim(),
+    capacitador:document.getElementById('m-capacitador').value.trim(),
+    modulo:document.getElementById('m-modulo').value.trim(),
+    ingreso:document.getElementById('m-ingreso').value,
+    inicio:document.getElementById('m-inicio').value,
+    tipo:tipoModal,
+    motivo:document.getElementById('m-motivo').value.trim(),
+  });
+  closeModal();
+}
+
+/* ========== METRICS ========== */
+function setEl(id,v){const e=document.getElementById(id);if(e) e.textContent=v;}
+
+function setFilter(f){
+  tipoFilter=f;
+  document.getElementById('chip-all').className='chip'+(f==='all'?' active-all':'');
+  document.getElementById('chip-ni').className='chip'+(f==='nuevo-ingreso'?' active-ni':'');
+  document.getElementById('chip-ref').className='chip'+(f==='reforzamiento'?' active-ref':'');
+  filterTable();
+}
+
+function filterTable(){
+  const q=(document.getElementById('search-input').value||'').toLowerCase();
+  let vis=0;
+  document.querySelectorAll('#colabs-body .sheet-row').forEach(row=>{
+    const name=(row.dataset.name||'').toLowerCase();
+    const tipo=row.dataset.tipo||'';
+    const hide=!((!q||name.includes(q))&&(tipoFilter==='all'||tipo===tipoFilter));
+    row.classList.toggle('hidden-row',hide);
+    if(!hide) vis++;
+  });
+  setEl('colabs-count',vis+' registros');
+}
+
+function renderMetrics(){
+  if(!sheets.length){
+    ['m-total','m-pend','m-no','m-proc','ni-total','ni-no','ref-total','ref-no'].forEach(id=>setEl(id,'0'));
+    ['m-prom-eval','m-prom-apro','ni-apro','ni-prom','ref-apro','ref-prom'].forEach(id=>setEl(id,'0'));
+    updateDonut(0,0,0,TOTAL); renderBarSec([]); renderColTable([]);
+    return;
+  }
+  const all=sheets.map(sh=>{
+    const s=getStats(sh.pageEl);
+    return{...s,
+      nombre:sh.pageEl.querySelector('.f-nombre').value.trim()||sh.name,
+      numEmp:sh.pageEl.querySelector('.f-numemp').value.trim()||'',
+      tipo:sh.pageEl.querySelector('.f-tipo').value,
+      modulo:sh.pageEl.querySelector('.f-modulo').value.trim()||'',
+    };
+  });
+  const n=all.length;
+  const sum=(k)=>all.reduce((a,d)=>a+d[k],0);
+  const tEv=sum('ev'),tAp=sum('ap'),tPr=sum('pr'),tNo=sum('no'),tPend=sum('pend');
+  setEl('m-total',n);
+  setEl('m-prom-eval',Math.round(tEv/n/TOTAL*100));
+  setEl('m-prom-apro',tEv>0?Math.round(tAp/tEv*100):0);
+  setEl('m-pend',tPend); setEl('m-no',tNo); setEl('m-proc',tPr);
+
+  calcTipoKPIs(all,'nuevo-ingreso','ni');
+  calcTipoKPIs(all,'reforzamiento','ref');
+
+  updateDonut(tAp,tPr,tNo,n*TOTAL-tAp-tPr-tNo);
+
+  const secAvg=Object.entries(SD).map(([k,rows],i)=>{
+    let tot=0;
+    sheets.forEach(sh=>{
+      const btns=sh.pageEl.querySelectorAll('.rows-'+k+' .check-btn');
+      let c=0; btns.forEach(b=>{if(b.classList.contains('checked')) c++;});
+      tot+=c/rows.length;
+    });
+    return{name:SEC_NAMES[k],pct:Math.round(tot/n*100),color:BAR_COLORS[i]};
+  });
+  renderBarSec(secAvg);
+  renderColTable(all);
+}
+
+function calcTipoKPIs(all,tipo,p){
+  const sub=all.filter(d=>d.tipo===tipo);
+  const n=sub.length; setEl(p+'-total',n);
+  if(!n){[p+'-apro',p+'-prom',p+'-no'].forEach(id=>setEl(id,'0'));return;}
+  const ev=sub.reduce((a,d)=>a+d.ev,0);
+  const ap=sub.reduce((a,d)=>a+d.ap,0);
+  setEl(p+'-apro',ev>0?Math.round(ap/ev*100):0);
+  setEl(p+'-prom',Math.round(ev/n/TOTAL*100));
+  setEl(p+'-no',sub.reduce((a,d)=>a+d.no,0));
+}
+
+function updateDonut(ap,pr,no,pend){
+  const tot=ap+pr+no+pend;
+  if(!tot){
+    ['d-apro','d-proc','d-no'].forEach(id=>document.getElementById(id).style.strokeDasharray='0 '+CIRC);
+    setEl('donut-ctr','0%');
+    ['apro','proc','no','pend'].forEach(k=>setEl('pct-'+k,'0%'));
+    return;
+  }
+  const dAp=ap/tot*CIRC,dPr=pr/tot*CIRC,dNo=no/tot*CIRC;
+  const g=(id)=>document.getElementById(id);
+  g('d-apro').style.strokeDasharray=`${dAp} ${CIRC-dAp}`;
+  g('d-apro').style.strokeDashoffset='0';
+  g('d-proc').style.strokeDasharray=`${dPr} ${CIRC-dPr}`;
+  g('d-proc').style.strokeDashoffset=`${CIRC-dAp}`;
+  g('d-no').style.strokeDasharray=`${dNo} ${CIRC-dNo}`;
+  g('d-no').style.strokeDashoffset=`${CIRC-dAp-dPr}`;
+  const pct=(v)=>Math.round(v/tot*100)+'%';
+  setEl('donut-ctr',pct(ap)); setEl('pct-apro',pct(ap)); setEl('pct-proc',pct(pr));
+  setEl('pct-no',pct(no)); setEl('pct-pend',pct(pend));
+}
+
+function renderBarSec(data){
+  const c=document.getElementById('bar-secciones');
+  if(!data.length){c.innerHTML='<p style="font-size:12px;color:var(--muted)">Sin datos aún</p>';return;}
+  c.innerHTML=data.map(d=>`
+    <div class="bar-item">
+      <span class="bar-name" title="${d.name}">${d.name}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${d.pct}%;background:${d.color}"></div></div>
+      <span class="bar-num">${d.pct}%</span>
+    </div>`).join('');
+}
+
+function renderColTable(data){
+  const body=document.getElementById('colabs-body');
+  if(!data.length){body.innerHTML='<div class="empty-state"><div class="ei">📂</div><p>Agrega hojas de colaboradores</p></div>';setEl('colabs-count','0 registros');return;}
+  body.innerHTML=data.map(d=>{
+    const estado=d.pct>=100?['badge-green','Completado']:d.pct>0?['badge-yellow','En curso']:['badge-gray','Sin iniciar'];
+    const tipoBdg=d.tipo==='reforzamiento'?['badge-orange','🔁 Reforzamiento']:['badge-blue','🆕 Nuevo ingreso'];
+    return `<div class="sheet-row" data-name="${d.nombre.toLowerCase()}" data-tipo="${d.tipo}">
+      <span class="sheet-name">${d.nombre}</span>
+      <span><span class="sheet-badge ${tipoBdg[0]}">${tipoBdg[1]}</span></span>
+      <span>${d.ev}/${TOTAL}</span><span>${d.ap}</span><span>${d.no}</span><span>${d.pr}</span>
+      <span>${d.pct}%</span>
+      <span><span class="sheet-badge ${estado[0]}">${estado[1]}</span></span>
+    </div>`;
+  }).join('');
+  setEl('colabs-count',data.length+' registros');
+}
+
+/* ========== EXCEL EXPORT ========== */
+function exportExcel(){
+  const wb=XLSX.utils.book_new();
+  const fecha=new Date().toLocaleDateString('es-MX');
+
+  // --- Hoja: Resumen ---
+  const all=sheets.map(sh=>{
+    const s=getStats(sh.pageEl);
+    return{...s,nombre:sh.pageEl.querySelector('.f-nombre').value.trim()||sh.name,tipo:sh.pageEl.querySelector('.f-tipo').value};
+  });
+  const n=all.length||1;
+  const tEv=all.reduce((a,d)=>a+d.ev,0),tAp=all.reduce((a,d)=>a+d.ap,0),tPr=all.reduce((a,d)=>a+d.pr,0),tNo=all.reduce((a,d)=>a+d.no,0);
+
+  const buildTipo=(tipo)=>{
+    const sub=all.filter(d=>d.tipo===tipo);
+    if(!sub.length) return[tipo==='nuevo-ingreso'?'Nuevo ingreso':'Reforzamiento',0,'0%','0%',0,0];
+    const ev=sub.reduce((a,d)=>a+d.ev,0),ap=sub.reduce((a,d)=>a+d.ap,0);
+    return[tipo==='nuevo-ingreso'?'Nuevo ingreso':'Reforzamiento',sub.length,ev>0?Math.round(ap/ev*100)+'%':'0%',Math.round(ev/sub.length/TOTAL*100)+'%',sub.reduce((a,d)=>a+d.no,0),sub.reduce((a,d)=>a+d.pr,0)];
+  };
+
+  const wsrData=[
+    ['REPORTE DE MÉTRICAS DE CAPACITACIÓN'],['Generado:',fecha],[],
+    ['GLOBAL'],
+    ['Colaboradores','Prom. evaluación (%)','Tasa aprobación (%)','Pendientes','No aprobados','En proceso'],
+    [all.length,Math.round(tEv/n/TOTAL*100)+'%',tEv>0?Math.round(tAp/tEv*100)+'%':'0%',all.reduce((a,d)=>a+d.pend,0),tNo,tPr],
+    [],['POR TIPO'],['Tipo','Colaboradores','Tasa aprobación (%)','Avance promedio (%)','No aprobados','En proceso'],
+    buildTipo('nuevo-ingreso'),buildTipo('reforzamiento'),
+  ];
+  const wsr=XLSX.utils.aoa_to_sheet(wsrData);
+  wsr['!cols']=[{wch:26},{wch:20},{wch:20},{wch:14},{wch:14},{wch:14}];
+  XLSX.utils.book_append_sheet(wb,wsr,'Resumen');
+
+  // --- Hoja: Colaboradores ---
+  const colHdr=['#','Nombre','Núm. empleado','CURP','Puesto','Depto.','Capacitador','Módulo','F. ingreso','F. inicio','F. término','Tipo','Motivo refuerzo','Evaluados','Aprobados','En proceso','No aprobados','Pendientes','Avance (%)','Estado'];
+  const colRows=[colHdr];
+  sheets.forEach((sh,i)=>{
+    const p=sh.pageEl,s=getStats(p);
+    const tipo=p.querySelector('.f-tipo').value;
+    colRows.push([
+      i+1,
+      p.querySelector('.f-nombre').value||sh.name,
+      p.querySelector('.f-numemp').value||'',
+      p.querySelector('.f-curp').value||'',
+      p.querySelector('.f-puesto').value||'',
+      p.querySelector('.f-depto').value||'',
+      p.querySelector('.f-capacitador').value||'',
+      p.querySelector('.f-modulo').value||'',
+      p.querySelector('.f-ingreso').value||'',
+      p.querySelector('.f-inicio').value||'',
+      p.querySelector('.f-termino').value||'',
+      tipo==='nuevo-ingreso'?'Nuevo ingreso':'Reforzamiento',
+      tipo==='reforzamiento'?(p.querySelector('.f-motivo').value||''):'',
+      s.ev,s.ap,s.pr,s.no,s.pend,s.pct+'%',
+      s.pct>=100?'Completado':s.pct>0?'En curso':'Sin iniciar'
+    ]);
+  });
+  const wsc=XLSX.utils.aoa_to_sheet(colRows);
+  wsc['!cols']=[{wch:4},{wch:26},{wch:14},{wch:20},{wch:18},{wch:18},{wch:18},{wch:16},{wch:12},{wch:12},{wch:12},{wch:16},{wch:24},{wch:10},{wch:10},{wch:10},{wch:12},{wch:10},{wch:10},{wch:12}];
+  XLSX.utils.book_append_sheet(wb,wsc,'Colaboradores');
+
+  // --- Hoja: Detalle Temas ---
+  const temHdr=['Colaborador','Tipo','Núm. empleado','Módulo','Semana','Sección','#','Tema','Evaluado','Resultado','Fecha','Semáforo','Observaciones'];
+  const temRows=[temHdr];
+  const semMap={'sem-verde':'✅ A tiempo','sem-amarillo':'⚠️ Por vencer','sem-rojo':'🔴 Vencido','sem-gris':'Sin fecha'};
+  const resMap={'aprobado':'Aprobado','proceso':'En proceso','no-aprobado':'No aprobado','':'Pendiente'};
+  sheets.forEach(sh=>{
+    const p=sh.pageEl;
+    const nombre=p.querySelector('.f-nombre').value||sh.name;
+    const tipo=p.querySelector('.f-tipo').value==='nuevo-ingreso'?'Nuevo ingreso':'Reforzamiento';
+    const numEmp=p.querySelector('.f-numemp').value||'';
+    const modulo=p.querySelector('.f-modulo').value||'';
+    Object.entries(SD).forEach(([sec,rows])=>{
+      const rowEls=p.querySelectorAll('.rows-'+sec+' .item-row');
+      rows.forEach(([num,tema,,semana],idx)=>{
+        const r=rowEls[idx]; if(!r) return;
+        const chk=r.querySelector('.check-btn').classList.contains('checked')?'Sí':'No';
+        const res=r.querySelector('.result-select').value||'';
+        const fch=r.querySelector('input[type="date"]').value||'';
+        const obs=r.querySelector('.obs-input').value||'';
+        const semEl=r.querySelector('.semaforo');
+        let semTxt='Sin fecha';
+        if(semEl) semTxt=semMap[Array.from(semEl.classList).find(c=>c.startsWith('sem-'))]||'Sin fecha';
+        temRows.push([nombre,tipo,numEmp,modulo,'Semana '+semana,SEC_NAMES[sec],num,tema,chk,resMap[res]||res,fch,semTxt,obs]);
+      });
+    });
+  });
+  const wst=XLSX.utils.aoa_to_sheet(temRows);
+  wst['!cols']=[{wch:24},{wch:16},{wch:14},{wch:16},{wch:9},{wch:22},{wch:4},{wch:32},{wch:8},{wch:12},{wch:12},{wch:14},{wch:26}];
+  XLSX.utils.book_append_sheet(wb,wst,'Detalle Temas');
+
+  XLSX.writeFile(wb,'Capacitacion_'+new Date().toISOString().slice(0,10)+'.xlsx');
+}
+
+/* ========== DELETE SHEET ========== */
+function deleteSheet(id){
+  if(sheets.length<=1){alert('No puedes eliminar la única hoja existente.');return;}
+  const sh=sheets.find(s=>s.id===id);
+  if(!sh) return;
+  if(!confirm(`¿Eliminar la hoja "${sh.name}"?\nEsta acción no se puede deshacer.`)) return;
+  sh.pageEl.remove();
+  const idx=sheets.findIndex(s=>s.id===id);
+  sheets.splice(idx,1);
+  // Switch to nearest tab
+  if(activeTab===id){
+    const next=sheets[Math.min(idx,sheets.length-1)];
+    switchTab(next?next.id:'metrics');
+  } else {
+    renderTabs();
+  }
+  markUnsaved();
+}
+
+/* ========== RENAME ========== */
+let renameTargetId=null;
+function openRename(id){
+  renameTargetId=id;
+  const sh=sheets.find(s=>s.id===id);
+  if(!sh) return;
+  document.getElementById('rename-input').value=sh.name;
+  document.getElementById('rename-overlay').classList.add('open');
+  setTimeout(()=>{const inp=document.getElementById('rename-input');inp.focus();inp.select();},80);
+}
+function closeRename(){
+  document.getElementById('rename-overlay').classList.remove('open');
+  renameTargetId=null;
+}
+function confirmRename(){
+  const val=document.getElementById('rename-input').value.trim();
+  if(!val){alert('El nombre no puede estar vacío.');return;}
+  const sh=sheets.find(s=>s.id===renameTargetId);
+  if(sh){
+    sh.name=val;
+    // Also update the nombre field in the page if it is empty
+    const inp=sh.pageEl.querySelector('.f-nombre');
+    if(inp&&!inp.value) inp.value=val;
+    renderTabs();
+    markUnsaved();
+  }
+  closeRename();
+}
+function outsideRenameClose(e){if(e.target===document.getElementById('rename-overlay')) closeRename();}
+
+/* ========== MICROSOFT GRAPH — SharePoint/OneDrive ========== */
+
+/* ---- Config ---- */
+const LS_CONFIG='checklist_sp_config';
+let msConfig=JSON.parse(localStorage.getItem(LS_CONFIG)||'{}');
+// msConfig = { clientId, filename, accessToken, tokenExpiry, userName, userEmail }
+
+let hasUnsavedChanges=false;
+let msalInstance=null;
+
+/* ---- Estado UI ---- */
+function setStatus(cls,txt,hint){
+  const st=document.getElementById('save-status');
+  const stTxt=document.getElementById('save-txt');
+  const stHint=document.getElementById('save-hint');
+  if(st) st.className='save-status '+(cls||'');
+  if(stTxt) stTxt.textContent=txt||'';
+  if(stHint&&hint) stHint.textContent=hint;
+}
+function markUnsaved(){
+  hasUnsavedChanges=true;
+  setStatus('unsaved','⚠️ Cambios sin guardar',
+    msConfig.accessToken?'Haz clic en "Guardar en SharePoint" para sincronizar':'Conéctate con Microsoft para guardar en SharePoint');
+}
+function scheduleAutoSave(){ markUnsaved(); }
+
+/* ---- Setup modal ---- */
+function openSetup(){
+  document.getElementById('redirect-uri-hint').textContent=window.location.href.split('?')[0].split('#')[0];
+  document.getElementById('setup-client-id').value=msConfig.clientId||'';
+  document.getElementById('setup-filename').value=msConfig.filename||'avances_capacitacion.json';
+  document.getElementById('setup-overlay').classList.add('open');
+}
+function closeSetup(){ document.getElementById('setup-overlay').classList.remove('open'); }
+function saveSetup(){
+  const cid=document.getElementById('setup-client-id').value.trim();
+  const fn=document.getElementById('setup-filename').value.trim()||'avances_capacitacion.json';
+  if(!cid){ alert('Por favor ingresa el Client ID.'); return; }
+  msConfig.clientId=cid;
+  msConfig.filename=fn;
+  localStorage.setItem(LS_CONFIG,JSON.stringify(msConfig));
+  closeSetup();
+  initMSAL();
+}
+
+/* ---- MSAL init ---- */
+function initMSAL(){
+  if(!msConfig.clientId) return;
+  const script=document.createElement('script');
+  script.src='https://cdnjs.cloudflare.com/ajax/libs/msal.js/2.38.2/msal-browser.min.js';
+  script.onload=()=>{
+    msalInstance=new msal.PublicClientApplication({
+      auth:{
+        clientId:msConfig.clientId,
+        authority:'https://login.microsoftonline.com/common',
+        redirectUri:window.location.href.split('?')[0].split('#')[0],
+      },
+      cache:{ cacheLocation:'localStorage', storeAuthStateInCookie:false }
+    });
+    msalInstance.initialize().then(()=>{
+      // Handle redirect response (when running outside iframe)
+      msalInstance.handleRedirectPromise().then(resp=>{
+        if(resp&&resp.accessToken) onTokenAcquired(resp);
+        else checkExistingSession();
+      }).catch(()=>{ checkExistingSession(); });
+    });
+  };
+  document.head.appendChild(script);
+}
+
+function checkExistingSession(){
+  const accounts=msalInstance?msalInstance.getAllAccounts():[];
+  if(accounts.length>0){
+    acquireTokenSilent(accounts[0]).then(resp=>{
+      if(resp) onTokenAcquired(resp);
+    }).catch(()=>{});
+  }
+}
+
+async function acquireTokenSilent(account){
+  try{
+    return await msalInstance.acquireTokenSilent({
+      scopes:['User.Read','Files.ReadWrite'],
+      account
+    });
+  }catch(e){
+    // In iframe context, try popup as fallback
+    try{
+      return await msalInstance.acquireTokenPopup({
+        scopes:['User.Read','Files.ReadWrite'],
+        account
+      });
+    }catch(e2){ return null; }
+  }
+}
+
+function signIn(){
+  if(!msConfig.clientId){ openSetup(); return; }
+  if(!msalInstance){ initMSAL(); setTimeout(signIn,1200); return; }
+  // Use popup (not redirect) so it works inside SharePoint iframe
+  msalInstance.loginPopup({ scopes:['User.Read','Files.ReadWrite'] })
+    .then(resp=>{ if(resp) onTokenAcquired(resp); })
+    .catch(e=>{
+      if(e.errorCode==='popup_window_error'){
+        // Fallback: tell user popups are blocked
+        setStatus('error','✗ Permite ventanas emergentes en tu navegador para iniciar sesión');
+      } else {
+        console.error('Login error',e);
+        setStatus('error','✗ Error al iniciar sesión: '+e.message);
+      }
+    });
+}
+
+function signOut(){
+  if(msalInstance){
+    const accounts=msalInstance.getAllAccounts();
+    if(accounts.length){
+      msalInstance.logoutPopup({account:accounts[0]}).catch(()=>{});
+    }
+  }
+  msConfig.accessToken=null; msConfig.userName=null; msConfig.userEmail=null;
+  localStorage.setItem(LS_CONFIG,JSON.stringify(msConfig));
+  renderUserArea(false);
+  document.getElementById('btn-save-sp').disabled=true;
+  document.getElementById('btn-load').disabled=true;
+  setStatus('','Sin cambios','Conéctate con Microsoft para guardar en SharePoint');
+}
+
+function onTokenAcquired(resp){
+  msConfig.accessToken=resp.accessToken;
+  msConfig.tokenExpiry=resp.expiresOn?.getTime()||( Date.now()+3500000 );
+  const acct=resp.account;
+  msConfig.userName=acct.name||acct.username;
+  msConfig.userEmail=acct.username;
+  localStorage.setItem(LS_CONFIG,JSON.stringify(msConfig));
+  renderUserArea(true);
+  document.getElementById('btn-save-sp').disabled=false;
+  document.getElementById('btn-load').disabled=false;
+  setStatus('synced','✓ Conectado como '+msConfig.userName,
+    'Usa "Cargar" para traer avances o "Guardar" para subir los actuales');
+}
+
+function renderUserArea(loggedIn){
+  const area=document.getElementById('ms-user-area');
+  if(loggedIn){
+    const initials=(msConfig.userName||'U').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    area.innerHTML=`<div class="ms-user">
+      <div class="ms-avatar">${initials}</div>
+      <span>${msConfig.userName||msConfig.userEmail}</span>
+      <button onclick="signOut()" style="background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:11px;margin-left:4px;" title="Cerrar sesión">✕</button>
+    </div>`;
+  } else {
+    area.innerHTML=`<button class="btn-ms" onclick="signIn()" id="btn-signin">
+      <svg width="16" height="16" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+      Conectar con Microsoft</button>`;
+  }
+}
+
+/* ---- Refresh token si está por vencer ---- */
+async function getValidToken(){
+  const exp=msConfig.tokenExpiry||0;
+  if(msConfig.accessToken && Date.now() < exp-60000) return msConfig.accessToken;
+  // Try silent refresh
+  if(msalInstance){
+    const accounts=msalInstance.getAllAccounts();
+    if(accounts.length){
+      const resp=await acquireTokenSilent(accounts[0]);
+      if(resp){ onTokenAcquired(resp); return resp.accessToken; }
+    }
+  }
+  return null;
+}
+
+/* ---- Recolectar datos del DOM ---- */
+function collectSheet(sh){
+  const p=sh.pageEl;
+  const g=(cls)=>{const e=p.querySelector(cls);return e?e.value:'';};
+  const rows={};
+  Object.keys(SD).forEach(sec=>{
+    rows[sec]=[];
+    p.querySelectorAll('.rows-'+sec+' .item-row').forEach(row=>{
+      rows[sec].push({
+        checked:row.querySelector('.check-btn').classList.contains('checked'),
+        result:row.querySelector('.result-select').value,
+        date:row.querySelector('input[type="date"]').value,
+        obs:row.querySelector('.obs-input').value,
+      });
+    });
+  });
+  return{ id:sh.id, name:sh.name,
+    nombre:g('.f-nombre'), numEmp:g('.f-numemp'), puesto:g('.f-puesto'),
+    capacitador:g('.f-capacitador'), modulo:g('.f-modulo'),
+    ingreso:g('.f-ingreso'), inicio:g('.f-inicio'), termino:g('.f-termino'),
+    tipo:g('.f-tipo'), motivo:g('.f-motivo'), rows };
+}
+
+/* ---- GUARDAR en OneDrive/SharePoint ---- */
+async function saveToSP(){
+  const token=await getValidToken();
+  if(!token){ alert('Sesión expirada. Vuelve a conectarte.'); signOut(); return; }
+  const btn=document.getElementById('btn-save-sp');
+  btn.disabled=true; btn.textContent='⬆️ Guardando...';
+  setStatus('syncing','Guardando en SharePoint...');
+  try{
+    const data={ version:1, savedAt:new Date().toISOString(), activeTab, sheets:sheets.map(sh=>collectSheet(sh)) };
+    const json=JSON.stringify(data,null,2);
+    const filename=msConfig.filename||'avances_capacitacion.json';
+    // Upload to OneDrive root (works for both OneDrive personal/business and SharePoint)
+    const resp=await fetch(
+      `https://graph.microsoft.com/v1.0/me/drive/root:/${filename}:/content`,
+      { method:'PUT', headers:{ 'Authorization':'Bearer '+token, 'Content-Type':'application/json' }, body:json }
+    );
+    if(!resp.ok) throw new Error('HTTP '+resp.status+': '+await resp.text());
+    hasUnsavedChanges=false;
+    const now=new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+    setStatus('synced','✓ Guardado en OneDrive · '+now, '📁 '+filename+' · '+msConfig.userEmail);
+  }catch(e){
+    console.error(e);
+    setStatus('error','✗ Error al guardar: '+e.message,'Revisa tu conexión o vuelve a iniciar sesión');
+  }finally{
+    btn.disabled=false; btn.innerHTML='⬆️ Guardar en SharePoint';
+  }
+}
+
+/* ---- CARGAR desde OneDrive/SharePoint ---- */
+async function loadFromSP(){
+  const token=await getValidToken();
+  if(!token){ alert('Sesión expirada. Vuelve a conectarte.'); signOut(); return; }
+  const btn=document.getElementById('btn-load');
+  btn.disabled=true; btn.textContent='⬇️ Cargando...';
+  setStatus('syncing','Cargando desde SharePoint...');
+  try{
+    const filename=msConfig.filename||'avances_capacitacion.json';
+    const resp=await fetch(
+      `https://graph.microsoft.com/v1.0/me/drive/root:/${filename}:/content`,
+      { headers:{ 'Authorization':'Bearer '+token } }
+    );
+    if(resp.status===404){ setStatus('synced','Sin avances guardados aún','Guarda por primera vez con el botón de la derecha'); btn.disabled=false; btn.textContent='⬇️ Cargar'; return; }
+    if(!resp.ok) throw new Error('HTTP '+resp.status);
+    const data=await resp.json();
+    applyLoadedData(data);
+    const now=new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+    setStatus('synced','✓ Avances cargados · '+now,'Datos guardados el '+(data.savedAt?new Date(data.savedAt).toLocaleString('es-MX'):'fecha desconocida'));
+  }catch(e){
+    console.error(e);
+    setStatus('error','✗ Error al cargar: '+e.message);
+  }finally{
+    btn.disabled=false; btn.textContent='⬇️ Cargar';
+  }
+}
+
+/* ---- Aplicar datos cargados ---- */
+function applyRowData(pageEl,rowData){
+  Object.entries(rowData).forEach(([sec,items])=>{
+    const rowEls=pageEl.querySelectorAll('.rows-'+sec+' .item-row');
+    items.forEach((d,i)=>{
+      const row=rowEls[i]; if(!row) return;
+      const chk=row.querySelector('.check-btn');
+      if(d.checked) chk.classList.add('checked'); else chk.classList.remove('checked');
+      const sel=row.querySelector('.result-select');
+      sel.value=d.result||''; sel.className='result-select '+(d.result||'');
+      row.querySelector('input[type="date"]').value=d.date||'';
+      row.querySelector('.obs-input').value=d.obs||'';
+    });
+  });
+}
+
+function applyLoadedData(data){
+  if(!data||!data.sheets||!data.sheets.length) return;
+  sheets.forEach(sh=>sh.pageEl.remove());
+  sheets=[];
+  data.sheets.forEach(sd=>{
+    createSheet({ _id:sd.id, nombre:sd.nombre, numEmp:sd.numEmp, puesto:sd.puesto,
+      capacitador:sd.capacitador, modulo:sd.modulo,
+      ingreso:sd.ingreso, inicio:sd.inicio, termino:sd.termino,
+      tipo:sd.tipo, motivo:sd.motivo, name:sd.name });
+    const sh=sheets[sheets.length-1];
+    sh.pageEl.id=sd.id; sh.id=sd.id;
+    sh.name=sd.name||sd.nombre||('Hoja '+sheets.length);
+    if(sd.rows) applyRowData(sh.pageEl,sd.rows);
+    updateStats(sh.pageEl);
+    if(sd.inicio) updateSemaforos(sh.pageEl);
+  });
+  const target=data.activeTab;
+  switchTab((target==='metrics'||sheets.find(s=>s.id===target))?target:sheets[0].id);
+  hasUnsavedChanges=false;
+}
+
+function clearAllData(){
+  if(!confirm('¿Reiniciar todo y empezar desde cero?\nEsto no borra los datos en SharePoint.')) return;
+  sheets.forEach(sh=>sh.pageEl.remove()); sheets=[];
+  createSheet({nombre:'Colaborador 1'});
+  switchTab('metrics');
+  hasUnsavedChanges=false;
+  setStatus('','Sin cambios');
+}
+
+window.addEventListener('beforeunload',e=>{
+  if(hasUnsavedChanges){e.preventDefault();e.returnValue='';}
+});
+
+/* ========== INIT ========== */
+createSheet({nombre:'Colaborador 1'});
+switchTab('metrics');
+setStatus('','Sin cambios','Conéctate con Microsoft para guardar en SharePoint/OneDrive');
+// Restore session if client ID already configured
+if(msConfig.clientId) initMSAL();
+</script>
+</body>
+</html>
